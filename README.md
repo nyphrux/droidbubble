@@ -12,6 +12,9 @@
   <a href="https://github.com/Velocity081/droidbubble/releases/latest/download/Droidbubble.apk">
     <img src="https://img.shields.io/badge/Download-APK-2ea44f?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xOSA5aC00VjNIOXY2SDVsNyA3IDctN3pNNSAxOHYyaDE0di0ySDV6Ii8%2BPC9zdmc%2B" alt="Download APK" />
   </a>
+  <a href="https://github.com/Velocity081/droidbubble/releases">
+    <img src="https://img.shields.io/github/downloads/Velocity081/droidbubble/total?style=for-the-badge" alt="Total Downloads" />
+  </a>
 </p>
 
 Droidbubble brings a fluid, interactive Dynamic Island to Android. Built natively with Kotlin and Jetpack Compose, it wraps smoothly around your front camera cutout, adapting to whatever you're doing in real time while staying out of the way of your touches.
