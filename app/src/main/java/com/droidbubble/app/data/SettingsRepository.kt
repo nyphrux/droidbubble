@@ -62,6 +62,7 @@ class SettingsRepository(private val context: Context) {
         val FONT_KEY = stringPreferencesKey("font_key")
         val SWAP_ACTIVITIES_ON_SWIPE = booleanPreferencesKey("swap_activities_on_swipe")
         val BLURRED_ALBUM_ART_BACKGROUND = booleanPreferencesKey("blurred_album_art_background")
+        val DESIGN_LANGUAGE = stringPreferencesKey("design_language")
         val GLASS_ENABLED = booleanPreferencesKey("glass_enabled")
         val GLASS_OPACITY = intPreferencesKey("glass_opacity")
         val MEDIA_WAVE_ANIMATION = booleanPreferencesKey("media_wave_animation")
@@ -129,6 +130,9 @@ class SettingsRepository(private val context: Context) {
             fontKey = preferences[PreferencesKeys.FONT_KEY] ?: "DEFAULT",
             swapActivitiesOnSwipe = preferences[PreferencesKeys.SWAP_ACTIVITIES_ON_SWIPE] ?: true,
             blurredAlbumArtBackground = preferences[PreferencesKeys.BLURRED_ALBUM_ART_BACKGROUND] ?: false,
+            designLanguage = preferences[PreferencesKeys.DESIGN_LANGUAGE]?.let {
+                try { com.droidbubble.app.model.DesignLanguage.valueOf(it) } catch (_: Exception) { null }
+            } ?: if (preferences[PreferencesKeys.GLASS_ENABLED] == true) com.droidbubble.app.model.DesignLanguage.GLASS else com.droidbubble.app.model.DesignLanguage.DROIDBUBBLE,
             glassEnabled = preferences[PreferencesKeys.GLASS_ENABLED] ?: false,
             glassOpacity = preferences[PreferencesKeys.GLASS_OPACITY] ?: 25,
             mediaWaveAnimation = preferences[PreferencesKeys.MEDIA_WAVE_ANIMATION] ?: true,
@@ -205,6 +209,9 @@ class SettingsRepository(private val context: Context) {
                 fontKey = preferences[PreferencesKeys.FONT_KEY] ?: "DEFAULT",
                 swapActivitiesOnSwipe = preferences[PreferencesKeys.SWAP_ACTIVITIES_ON_SWIPE] ?: true,
             blurredAlbumArtBackground = preferences[PreferencesKeys.BLURRED_ALBUM_ART_BACKGROUND] ?: false,
+            designLanguage = preferences[PreferencesKeys.DESIGN_LANGUAGE]?.let {
+                try { com.droidbubble.app.model.DesignLanguage.valueOf(it) } catch (_: Exception) { null }
+            } ?: if (preferences[PreferencesKeys.GLASS_ENABLED] == true) com.droidbubble.app.model.DesignLanguage.GLASS else com.droidbubble.app.model.DesignLanguage.DROIDBUBBLE,
             glassEnabled = preferences[PreferencesKeys.GLASS_ENABLED] ?: false,
             glassOpacity = preferences[PreferencesKeys.GLASS_OPACITY] ?: 25,
             mediaWaveAnimation = preferences[PreferencesKeys.MEDIA_WAVE_ANIMATION] ?: true,
@@ -272,7 +279,8 @@ class SettingsRepository(private val context: Context) {
             preferences[PreferencesKeys.FONT_KEY] = newSettings.fontKey
             preferences[PreferencesKeys.SWAP_ACTIVITIES_ON_SWIPE] = newSettings.swapActivitiesOnSwipe
             preferences[PreferencesKeys.BLURRED_ALBUM_ART_BACKGROUND] = newSettings.blurredAlbumArtBackground
-            preferences[PreferencesKeys.GLASS_ENABLED] = newSettings.glassEnabled
+            preferences[PreferencesKeys.DESIGN_LANGUAGE] = newSettings.designLanguage.name
+            preferences[PreferencesKeys.GLASS_ENABLED] = (newSettings.designLanguage == com.droidbubble.app.model.DesignLanguage.GLASS)
             preferences[PreferencesKeys.GLASS_OPACITY] = newSettings.glassOpacity
             preferences[PreferencesKeys.MEDIA_WAVE_ANIMATION] = newSettings.mediaWaveAnimation
             preferences[PreferencesKeys.SPINNING_ALBUM_ART] = newSettings.spinningAlbumArt

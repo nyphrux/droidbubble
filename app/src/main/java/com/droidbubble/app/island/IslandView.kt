@@ -195,6 +195,7 @@ import androidx.compose.ui.unit.sp
 import com.droidbubble.app.model.ActiveCallState
 import com.droidbubble.app.model.IslandPriority
 import com.droidbubble.app.model.IslandSettings
+import com.droidbubble.app.model.DesignLanguage
 import com.droidbubble.app.model.MediaInfo
 import com.droidbubble.app.model.NotificationInfo
 import com.droidbubble.app.model.ScreenRecordingState
@@ -1689,6 +1690,7 @@ fun IslandOverlayRoot(
                                         wavyProgressBar = settings.wavyProgressBar,
                                         notificationMaxLines = settings.notificationMaxLines,
                                         charging = charging,
+                                        designLanguage = settings.designLanguage,
                                         onCollapse = {
                                             triggerHaptic()
                                             IslandStateManager.collapse()
@@ -1697,7 +1699,7 @@ fun IslandOverlayRoot(
                                 }
                             }
                             GlassBottomHighlight(
-                                glassEnabled = settings.glassEnabled,
+                                glassEnabled = settings.isGlass,
                                 glassOpacity = settings.glassOpacity,
                                 cornerRadius = animatedCornerRadius,
                                 modifier = Modifier.align(Alignment.BottomCenter)
@@ -1953,6 +1955,7 @@ fun IslandOverlayRoot(
                                         wavyProgressBar = settings.wavyProgressBar,
                                         notificationMaxLines = settings.notificationMaxLines,
                                         charging = charging,
+                                        designLanguage = settings.designLanguage,
                                         onCollapse = {
                                             triggerHaptic()
                                             IslandStateManager.collapse()
@@ -1961,7 +1964,7 @@ fun IslandOverlayRoot(
                                 }
                             }
                             GlassBottomHighlight(
-                                glassEnabled = settings.glassEnabled,
+                                glassEnabled = settings.isGlass,
                                 glassOpacity = settings.glassOpacity,
                                 cornerRadius = animatedCornerRadius,
                                 modifier = Modifier.align(Alignment.BottomCenter)
@@ -2215,6 +2218,7 @@ fun IslandOverlayRoot(
                                         wavyProgressBar = settings.wavyProgressBar,
                                         notificationMaxLines = settings.notificationMaxLines,
                                         charging = charging,
+                                        designLanguage = settings.designLanguage,
                                         onCollapse = {
                                             triggerHaptic()
                                             IslandStateManager.collapse()
@@ -2223,7 +2227,7 @@ fun IslandOverlayRoot(
                                 }
                             }
                             GlassBottomHighlight(
-                                glassEnabled = settings.glassEnabled,
+                                glassEnabled = settings.isGlass,
                                 glassOpacity = settings.glassOpacity,
                                 cornerRadius = animatedCornerRadius,
                                 modifier = Modifier.align(Alignment.BottomCenter)
@@ -2376,7 +2380,8 @@ fun IslandOverlayRoot(
                                     weatherInfo = weatherInfo,
                                     networkSpeedInfo = networkSpeedInfo,
                                     spinningAlbumArt = settings.spinningAlbumArt,
-                                    charging = charging
+                                    charging = charging,
+                                    designLanguage = settings.designLanguage
                                 )
                             }
                         }
@@ -2811,7 +2816,8 @@ fun IslandOverlayRoot(
                                 weatherInfo = weatherInfo,
                                 networkSpeedInfo = networkSpeedInfo,
                                 secondaryPriority = compactSecondaryPriority,
-                                charging = charging
+                                charging = charging,
+                                designLanguage = settings.designLanguage
                             )
                         }
                     }
@@ -3073,7 +3079,8 @@ fun CompactSpinningVinylCover(
     bitmap: Bitmap?,
     isPlaying: Boolean,
     size: Dp,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    shape: Shape = CircleShape
 ) {
     val vinylRotation = remember { Animatable(0f) }
     LaunchedEffect(isPlaying) {
@@ -3096,7 +3103,7 @@ fun CompactSpinningVinylCover(
             .graphicsLayer {
                 rotationZ = vinylRotation.value
             }
-            .clip(CircleShape)
+            .clip(shape)
             .background(Color(0xFF1C1C1E)),
         contentAlignment = Alignment.Center
     ) {
@@ -3196,7 +3203,8 @@ fun AuxiliaryBubbleContent(
     weatherInfo: WeatherInfo = WeatherInfo(),
     networkSpeedInfo: NetworkSpeedInfo = NetworkSpeedInfo(),
     spinningAlbumArt: Boolean = false,
-    charging: IslandStateManager.ChargingInfo? = null
+    charging: IslandStateManager.ChargingInfo? = null,
+    designLanguage: DesignLanguage = DesignLanguage.DROIDBUBBLE
 ) {
     when (priority) {
         IslandPriority.CALL -> {
@@ -3261,11 +3269,13 @@ fun AuxiliaryBubbleContent(
         }
         IslandPriority.MEDIA -> {
             val displayArt = media?.albumArt ?: media?.appIcon
+            val vinylShape = if (designLanguage == DesignLanguage.MATERIAL3) M3CookieShape else CircleShape
             if (spinningAlbumArt) {
                 CompactSpinningVinylCover(
                     bitmap = displayArt,
                     isPlaying = media?.isPlaying == true,
-                    size = 20.dp
+                    size = 20.dp,
+                    shape = vinylShape
                 )
             } else if (displayArt != null) {
                 Image(
@@ -3273,7 +3283,7 @@ fun AuxiliaryBubbleContent(
                     contentDescription = "Media Art",
                     modifier = Modifier
                         .size(18.dp)
-                        .clip(CircleShape)
+                        .clip(vinylShape)
                 )
             } else {
                 EqualizerVisualizer(isPlaying = media?.isPlaying == true)
@@ -3369,7 +3379,8 @@ fun CompactContent(
     weatherInfo: WeatherInfo = WeatherInfo(),
     networkSpeedInfo: NetworkSpeedInfo = NetworkSpeedInfo(),
     secondaryPriority: IslandPriority? = null,
-    charging: IslandStateManager.ChargingInfo? = null
+    charging: IslandStateManager.ChargingInfo? = null,
+    designLanguage: DesignLanguage = DesignLanguage.DROIDBUBBLE
 ) {
     val leadingElement = @Composable {
         when (priority) {
@@ -3473,12 +3484,15 @@ fun CompactContent(
 
             IslandPriority.MEDIA -> {
                 val displayArt = media?.albumArt ?: media?.appIcon
+                val vinylShape = if (designLanguage == DesignLanguage.MATERIAL3) M3CookieShape else CircleShape
+                val staticMediaShape = if (designLanguage == DesignLanguage.MATERIAL3) M3CookieShape else RoundedCornerShape(5.dp)
                 if (spinningAlbumArt) {
                     CompactSpinningVinylCover(
                         bitmap = displayArt,
                         isPlaying = media?.isPlaying == true,
                         size = 22.dp,
-                        modifier = if (isLeftCutout || isCompactDual) Modifier else Modifier.offset(x = (-3).dp)
+                        modifier = if (isLeftCutout || isCompactDual) Modifier else Modifier.offset(x = (-3).dp),
+                        shape = vinylShape
                     )
                 } else if (displayArt != null) {
                     Image(
@@ -3486,7 +3500,7 @@ fun CompactContent(
                         contentDescription = "Media Art",
                         modifier = Modifier
                             .size(20.dp)
-                            .clip(RoundedCornerShape(5.dp))
+                            .clip(staticMediaShape)
                     )
                 } else {
                     Icon(
@@ -3779,14 +3793,15 @@ fun ExpandedCardContent(
     wavyProgressBar: Boolean = true,
     notificationMaxLines: Int = 2,
     charging: IslandStateManager.ChargingInfo? = null,
+    designLanguage: DesignLanguage = DesignLanguage.DROIDBUBBLE,
     onCollapse: () -> Unit
 ) {
     when (priority) {
         IslandPriority.CALL -> {
-            ExpandedCallView(activeCall, onCollapse, scale)
+            ExpandedCallView(activeCall, onCollapse, scale, designLanguage = designLanguage)
         }
         IslandPriority.SCREEN_RECORDING -> {
-            ExpandedRecordingView(recording, onCollapse, scale)
+            ExpandedRecordingView(recording, onCollapse, scale, designLanguage = designLanguage)
         }
         IslandPriority.POP_NOTIFICATION -> {
             ExpandedNotificationView(notification, onCollapse, scale, maxLines = notificationMaxLines)
@@ -3803,7 +3818,8 @@ fun ExpandedCardContent(
                 onCollapse = onCollapse,
                 scale = scale,
                 spinningAlbumArt = spinningAlbumArt,
-                wavyProgressBar = wavyProgressBar
+                wavyProgressBar = wavyProgressBar,
+                designLanguage = designLanguage
             )
         }
         IslandPriority.FLASHLIGHT -> {
@@ -3815,7 +3831,8 @@ fun ExpandedCardContent(
                 onTurnOff = {
                     IslandStateManager.turnOffFlashlight()
                 },
-                onCollapse = onCollapse
+                onCollapse = onCollapse,
+                designLanguage = designLanguage
             )
         }
         IslandPriority.FPS -> {
@@ -3841,7 +3858,8 @@ fun ExpandedFlashlightView(
     level: Int,
     onSetLevel: (Int) -> Unit,
     onTurnOff: () -> Unit,
-    onCollapse: () -> Unit
+    onCollapse: () -> Unit,
+    designLanguage: DesignLanguage = DesignLanguage.DROIDBUBBLE
 ) {
     val view = LocalView.current
 
@@ -4058,14 +4076,22 @@ fun ExpandedFlashlightView(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Bottom section: Large centered flashlight icon (NO dark circle background, NO radial glow)
-        // Tapping on this icon turns the flashlight off!
+        // Bottom section: Large centered flashlight icon (NO dark circle background, NO radial glow in standard)
+        // In Material 3, framed in an expressive Clover shape
         val (flashBtnInteraction, flashBtnBounce) = rememberBounceButtonState()
+        val flashBtnShape = if (designLanguage == DesignLanguage.MATERIAL3) M3CloverShape else CircleShape
         Box(
             modifier = Modifier
                 .padding(bottom = 8.dp)
                 .size(64.dp)
                 .then(flashBtnBounce)
+                .then(
+                    if (designLanguage == DesignLanguage.MATERIAL3) {
+                        Modifier
+                            .clip(flashBtnShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
+                    } else Modifier
+                )
                 .clickable(
                     interactionSource = flashBtnInteraction,
                     indication = null
@@ -4092,7 +4118,8 @@ fun ExpandedMediaView(
     onCollapse: () -> Unit,
     scale: Float = 1.0f,
     spinningAlbumArt: Boolean = false,
-    wavyProgressBar: Boolean = true
+    wavyProgressBar: Boolean = true,
+    designLanguage: DesignLanguage = DesignLanguage.DROIDBUBBLE
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -4433,13 +4460,23 @@ fun ExpandedMediaView(
             contentAlignment = Alignment.Center
         ) {
             // Centered Controls: Previous, Play/Pause, Next
+            val playBtnShape = if (designLanguage == DesignLanguage.MATERIAL3) M3CloverShape else CircleShape
+            val prevNextShape = if (designLanguage == DesignLanguage.MATERIAL3) M3CookieShape else CircleShape
+            val prevNextModifier = if (designLanguage == DesignLanguage.MATERIAL3) {
+                Modifier
+                    .size(prevNextSize)
+                    .clip(prevNextShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
+            } else {
+                Modifier.size(prevNextSize)
+            }
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 BouncyIconButton(
                     onClick = { IslandStateManager.onSkipPrevious?.invoke() },
-                    modifier = Modifier.size(prevNextSize)
+                    modifier = prevNextModifier
                 ) {
                     Icon(
                         imageVector = Icons.Default.FastRewind,
@@ -4455,7 +4492,7 @@ fun ExpandedMediaView(
                     onClick = { IslandStateManager.onPlayPause?.invoke() },
                     modifier = Modifier
                         .size(playBtnSize)
-                        .clip(CircleShape)
+                        .clip(playBtnShape)
                         .background(playButtonBg)
                 ) {
                     Icon(
@@ -4470,7 +4507,7 @@ fun ExpandedMediaView(
 
                 BouncyIconButton(
                     onClick = { IslandStateManager.onSkipNext?.invoke() },
-                    modifier = Modifier.size(prevNextSize)
+                    modifier = prevNextModifier
                 ) {
                     Icon(
                         imageVector = Icons.Default.FastForward,
@@ -5160,7 +5197,12 @@ fun ExpandedProgressView(notification: NotificationInfo?, onCollapse: () -> Unit
 }
 
 @Composable
-fun ExpandedRecordingView(recording: ScreenRecordingState, onCollapse: () -> Unit, scale: Float = 1.0f) {
+fun ExpandedRecordingView(
+    recording: ScreenRecordingState,
+    onCollapse: () -> Unit,
+    scale: Float = 1.0f,
+    designLanguage: DesignLanguage = DesignLanguage.DROIDBUBBLE
+) {
     val minutes = recording.durationSeconds / 60
     val seconds = recording.durationSeconds % 60
     val timerText = String.format(Locale.US, "%02d:%02d", minutes, seconds)
@@ -5190,6 +5232,8 @@ fun ExpandedRecordingView(recording: ScreenRecordingState, onCollapse: () -> Uni
             )
         }
 
+        val recSecondaryShape = if (designLanguage == DesignLanguage.MATERIAL3) M3CookieShape else CircleShape
+        val recPrimaryShape = if (designLanguage == DesignLanguage.MATERIAL3) M3CloverShape else CircleShape
         Row(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -5199,7 +5243,7 @@ fun ExpandedRecordingView(recording: ScreenRecordingState, onCollapse: () -> Uni
                     IslandStateManager.onTogglePauseRecording?.invoke()
                 },
                 modifier = Modifier.size(circleButtonSize),
-                shape = CircleShape,
+                shape = recSecondaryShape,
                 contentPadding = PaddingValues(0.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(
                     containerColor = Color(0xFF2C2C2E),
@@ -5219,7 +5263,7 @@ fun ExpandedRecordingView(recording: ScreenRecordingState, onCollapse: () -> Uni
                     onCollapse()
                 },
                 modifier = Modifier.size(circleButtonSize),
-                shape = CircleShape,
+                shape = recPrimaryShape,
                 contentPadding = PaddingValues(0.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(
                     containerColor = Color(0xFFFF453A).copy(alpha = 0.22f),
@@ -5238,7 +5282,12 @@ fun ExpandedRecordingView(recording: ScreenRecordingState, onCollapse: () -> Uni
 }
 
 @Composable
-fun ExpandedCallView(activeCall: ActiveCallState, onCollapse: () -> Unit, scale: Float = 1.0f) {
+fun ExpandedCallView(
+    activeCall: ActiveCallState,
+    onCollapse: () -> Unit,
+    scale: Float = 1.0f,
+    designLanguage: DesignLanguage = DesignLanguage.DROIDBUBBLE
+) {
     val context = LocalContext.current
     val minutes = activeCall.durationSeconds / 60
     val seconds = activeCall.durationSeconds % 60
@@ -5295,6 +5344,8 @@ fun ExpandedCallView(activeCall: ActiveCallState, onCollapse: () -> Unit, scale:
             }
         }
 
+        val callSecondaryShape = if (designLanguage == DesignLanguage.MATERIAL3) M3CookieShape else CircleShape
+        val callPrimaryShape = if (designLanguage == DesignLanguage.MATERIAL3) M3CloverShape else CircleShape
         Row(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -5304,7 +5355,7 @@ fun ExpandedCallView(activeCall: ActiveCallState, onCollapse: () -> Unit, scale:
                     IslandStateManager.onToggleCallMuteOrSpeaker?.invoke()
                 },
                 modifier = Modifier.size(circleButtonSize),
-                shape = CircleShape,
+                shape = callSecondaryShape,
                 contentPadding = PaddingValues(0.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(
                     containerColor = if (activeCall.isMuted) Color.White else Color(0xFF2C2C2E),
@@ -5329,7 +5380,7 @@ fun ExpandedCallView(activeCall: ActiveCallState, onCollapse: () -> Unit, scale:
                     onCollapse()
                 },
                 modifier = Modifier.size(circleButtonSize),
-                shape = CircleShape,
+                shape = callPrimaryShape,
                 contentPadding = PaddingValues(0.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(
                     containerColor = Color(0xFFFF453A),

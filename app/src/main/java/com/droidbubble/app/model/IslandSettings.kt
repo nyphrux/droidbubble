@@ -13,6 +13,12 @@ val DEFAULT_FEATURE_PRIORITIES = listOf(
     "NETWORK_SPEED"
 )
 
+enum class DesignLanguage(val id: String, val displayName: String) {
+    DROIDBUBBLE("DROIDBUBBLE", "Droidbubble"),
+    GLASS("GLASS", "Droidbubble glass"),
+    MATERIAL3("MATERIAL3", "Material 3")
+}
+
 data class IslandSettings(
     val isEnabled: Boolean = true,
     val widthDp: Int = 180,
@@ -56,6 +62,7 @@ data class IslandSettings(
     val fontKey: String = "DEFAULT",
     val swapActivitiesOnSwipe: Boolean = true,
     val blurredAlbumArtBackground: Boolean = false,
+    val designLanguage: DesignLanguage = DesignLanguage.DROIDBUBBLE,
     val glassEnabled: Boolean = false,
     val glassOpacity: Int = 25,
     val mediaWaveAnimation: Boolean = true,
@@ -69,4 +76,7 @@ data class IslandSettings(
     val splitDamping: Float = 0.63f,
     val splitStiffness: Float = 320f,
     val featurePriorities: List<String> = DEFAULT_FEATURE_PRIORITIES
-)
+) {
+    val isGlass: Boolean get() = designLanguage == DesignLanguage.GLASS || glassEnabled
+    val isMaterial3: Boolean get() = designLanguage == DesignLanguage.MATERIAL3
+}

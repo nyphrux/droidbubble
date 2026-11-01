@@ -121,6 +121,7 @@ import androidx.compose.material.icons.filled.FontDownload
 import androidx.compose.material3.RadioButton
 import com.droidbubble.app.theme.ISLAND_FONTS
 import com.droidbubble.app.model.DEFAULT_FEATURE_PRIORITIES
+import com.droidbubble.app.model.DesignLanguage
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.AlertDialog
@@ -2072,48 +2073,95 @@ fun AppearancePage(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    val glassActive = settings.glassEnabled
+                    val isGlass = settings.designLanguage == DesignLanguage.GLASS
                     SettingsCardItem(
-                        position = if (glassActive) GroupPosition.TOP else GroupPosition.SINGLE,
-                        isActive = settings.glassEnabled
+                        position = if (isGlass) GroupPosition.TOP else GroupPosition.SINGLE,
+                        isActive = settings.designLanguage != DesignLanguage.DROIDBUBBLE
                     ) {
-                        ListItem(
-                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                            headlineContent = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Text("Glass", fontWeight = FontWeight.SemiBold)
-                                    Surface(
-                                        shape = RoundedCornerShape(6.dp),
-                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                                        contentColor = MaterialTheme.colorScheme.primary
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp)
+                        ) {
+                            ListItem(
+                                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                                headlineContent = {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text("Design Language", fontWeight = FontWeight.SemiBold)
+                                        if (settings.designLanguage == DesignLanguage.GLASS) {
+                                            Surface(
+                                                shape = RoundedCornerShape(6.dp),
+                                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                                contentColor = MaterialTheme.colorScheme.primary
+                                            ) {
+                                                Text(
+                                                    text = "Experimental",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.Bold,
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                },
+                                leadingContent = {
+                                    Icon(Icons.Default.Palette, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            )
+
+                            // 3-way Segmented Control
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                                    .padding(4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                DesignLanguage.values().forEach { lang ->
+                                    val isSelected = settings.designLanguage == lang
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(
+                                                if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+                                            )
+                                            .clickable {
+                                                onUpdateSettings {
+                                                    it.copy(
+                                                        designLanguage = lang,
+                                                        glassEnabled = (lang == DesignLanguage.GLASS)
+                                                    )
+                                                }
+                                            }
+                                            .padding(vertical = 10.dp),
+                                        contentAlignment = Alignment.Center
                                     ) {
                                         Text(
-                                            text = "Experimental",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            text = when (lang) {
+                                                DesignLanguage.DROIDBUBBLE -> "Droidbubble"
+                                                DesignLanguage.GLASS -> "Glass"
+                                                DesignLanguage.MATERIAL3 -> "Material 3"
+                                            },
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1
                                         )
                                     }
                                 }
-                            },
-                            leadingContent = {
-                                Icon(Icons.Default.Layers, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                            },
-                            trailingContent = {
-                                Switch(
-                                    checked = settings.glassEnabled,
-                                    onCheckedChange = { enabled ->
-                                        onUpdateSettings { it.copy(glassEnabled = enabled) }
-                                    }
-                                )
                             }
-                        )
+                        }
                     }
 
-                    if (glassActive) {
+                    if (isGlass) {
                         SettingsCardItem(position = GroupPosition.BOTTOM) {
                             SliderSettingItem(
                                 label = "Opacity",
