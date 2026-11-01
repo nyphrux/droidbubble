@@ -5235,6 +5235,7 @@ fun ExpandedProgressView(
         }
 
         // Right section: Circular Icon Buttons matching Screen Recording and Call cards
+        val progActionShape = if (designLanguage == DesignLanguage.MATERIAL3) M3CookieShape else CircleShape
         Row(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -5248,17 +5249,30 @@ fun ExpandedProgressView(
                         }
                     },
                     modifier = Modifier.size(circleButtonSize),
-                    shape = CircleShape,
+                    shape = progActionShape,
                     contentPadding = PaddingValues(0.dp),
                     colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = if (isDestructiveAction) Color(0xFFFF453A).copy(alpha = 0.22f) else Color(0xFF2C2C2E),
-                        contentColor = if (isDestructiveAction) Color(0xFFFF453A) else Color(0xFFF4F4F5)
+                        containerColor = if (designLanguage == DesignLanguage.MATERIAL3) {
+                            if (isDestructiveAction) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceContainerHighest
+                        } else {
+                            if (isDestructiveAction) Color(0xFFFF453A).copy(alpha = 0.22f) else Color(0xFF2C2C2E)
+                        },
+                        contentColor = if (designLanguage == DesignLanguage.MATERIAL3) {
+                            if (isDestructiveAction) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurface
+                        } else {
+                            if (isDestructiveAction) Color(0xFFFF453A) else Color(0xFFF4F4F5)
+                        }
                     )
                 ) {
+                    val actIconTint = if (designLanguage == DesignLanguage.MATERIAL3) {
+                        if (isDestructiveAction) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurface
+                    } else {
+                        if (isDestructiveAction) Color(0xFFFF453A) else Color(0xFFF4F4F5)
+                    }
                     Icon(
                         imageVector = primaryActionIcon,
                         contentDescription = primaryAction.title,
-                        tint = if (isDestructiveAction) Color(0xFFFF453A) else Color(0xFFF4F4F5),
+                        tint = actIconTint,
                         modifier = Modifier.size(actionIconSize)
                     )
                 }
@@ -5269,16 +5283,17 @@ fun ExpandedProgressView(
                         onCollapse()
                     },
                     modifier = Modifier.size(circleButtonSize),
-                    shape = CircleShape,
+                    shape = progActionShape,
                     contentPadding = PaddingValues(0.dp),
                     colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = Color(0xFF2C2C2E),
-                        contentColor = Color(0xFFF4F4F5)
+                        containerColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.surfaceContainerHighest else Color(0xFF2C2C2E),
+                        contentColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurface else Color(0xFFF4F4F5)
                     )
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Dismiss",
+                        tint = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurface else Color(0xFFF4F4F5),
                         modifier = Modifier.size(actionIconSize)
                     )
                 }
@@ -5287,17 +5302,17 @@ fun ExpandedProgressView(
             BouncyFilledTonalButton(
                 onClick = { openProgressApp() },
                 modifier = Modifier.size(circleButtonSize),
-                shape = CircleShape,
+                shape = progActionShape,
                 contentPadding = PaddingValues(0.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = Color(0xFFE5E5EA),
-                    contentColor = Color.Black
+                    containerColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.surfaceContainerHighest else Color(0xFFE5E5EA),
+                    contentColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurface else Color.Black
                 )
             ) {
                 Icon(
                     imageVector = Icons.Default.OpenInNew,
                     contentDescription = "Open",
-                    tint = Color.Black,
+                    tint = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurface else Color.Black,
                     modifier = Modifier.size(actionIconSize)
                 )
             }
@@ -5382,7 +5397,7 @@ fun ExpandedRecordingView(
                 Icon(
                     imageVector = Icons.Default.Stop,
                     contentDescription = "Stop",
-                    tint = Color(0xFFFF453A),
+                    tint = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onErrorContainer else Color(0xFFFF453A),
                     modifier = Modifier.size(iconSize)
                 )
             }
@@ -5509,7 +5524,7 @@ fun ExpandedCallView(
                 Icon(
                     imageVector = Icons.Default.CallEnd,
                     contentDescription = "End Call",
-                    tint = Color.White,
+                    tint = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onErrorContainer else Color.White,
                     modifier = Modifier.size(iconSize)
                 )
             }
