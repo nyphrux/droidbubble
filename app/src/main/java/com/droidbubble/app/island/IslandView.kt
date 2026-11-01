@@ -1443,13 +1443,20 @@ fun IslandOverlayRoot(
                                                     )
                                                 )
                                             )
+                                        } else if (settings.designLanguage == DesignLanguage.MATERIAL3) {
+                                            val m3CardBg = lerp(
+                                                Color.Black,
+                                                lerp(Color(0xFF101014), MaterialTheme.colorScheme.primary, 0.14f),
+                                                expandProgress
+                                            )
+                                            Modifier.background(m3CardBg)
                                         } else {
                                             Modifier.background(Color.Black)
                                         }
                                     } else Modifier.background(Color.Transparent)
                                 )
                                 .then(
-                                    if (settings.showOutline && animatedCard1Width > 8.dp) {
+                                    if (settings.showOutline && settings.designLanguage != DesignLanguage.MATERIAL3 && animatedCard1Width > 8.dp) {
                                         Modifier.border(
                                             width = settings.outlineThicknessDp.dp,
                                             color = primaryOutlineColor,
@@ -1738,7 +1745,7 @@ fun IslandOverlayRoot(
                                     }
                                 )
                                 .then(
-                                    if (settings.showOutline) {
+                                    if (settings.showOutline && settings.designLanguage != DesignLanguage.MATERIAL3) {
                                         Modifier.border(
                                             width = settings.outlineThicknessDp.dp,
                                             color = secondaryOutlineColor,
@@ -2005,7 +2012,7 @@ fun IslandOverlayRoot(
                                     }
                                 )
                                 .then(
-                                    if (settings.showOutline) {
+                                    if (settings.showOutline && settings.designLanguage != DesignLanguage.MATERIAL3) {
                                         Modifier.border(
                                             width = settings.outlineThicknessDp.dp,
                                             color = tertiaryOutlineColor,
@@ -2338,7 +2345,7 @@ fun IslandOverlayRoot(
                             .clip(CircleShape)
                             .background(Color.Black)
                             .then(
-                                if (settings.showOutline && animatedBubbleOffsetX > mainRightEdgeFromOrigin * 0.7f) {
+                                if (settings.showOutline && settings.designLanguage != DesignLanguage.MATERIAL3 && animatedBubbleOffsetX > mainRightEdgeFromOrigin * 0.7f) {
                                     Modifier.border(
                                         width = settings.outlineThicknessDp.dp,
                                         color = secondaryOutlineColor,
@@ -2450,7 +2457,7 @@ fun IslandOverlayRoot(
                         .clip(compactPillShape)
                         .background(if (animatedCompactWidth > 2.dp) Color.Black else Color.Transparent)
                         .then(
-                            if (settings.showOutline && animatedCompactWidth > 8.dp) {
+                            if (settings.showOutline && settings.designLanguage != DesignLanguage.MATERIAL3 && animatedCompactWidth > 8.dp) {
                                 val outlineAlpha = primaryOutlineColor.alpha * compactPillAlpha
                                 if (settings.isTeardropCutout) {
                                     Modifier.drawWithContent {

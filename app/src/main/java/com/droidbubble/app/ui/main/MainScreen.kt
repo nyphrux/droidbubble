@@ -2035,48 +2035,10 @@ fun AppearancePage(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    val outlineActive = settings.showOutline
-                    SettingsCardItem(position = if (outlineActive) GroupPosition.TOP else GroupPosition.SINGLE, isActive = settings.showOutline) {
-                        ListItem(
-                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                            headlineContent = { Text("Island Outline", fontWeight = FontWeight.SemiBold) },
-                            leadingContent = {
-                                Icon(Icons.Default.CropSquare, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                            },
-                            trailingContent = {
-                                Switch(
-                                    checked = settings.showOutline,
-                                    onCheckedChange = { show ->
-                                        onUpdateSettings { it.copy(showOutline = show) }
-                                    }
-                                )
-                            }
-                        )
-                    }
-
-                    if (outlineActive) {
-                        SettingsCardItem(position = GroupPosition.BOTTOM) {
-                            SliderSettingItem(
-                                label = "Outline Thickness",
-                                value = settings.outlineThicknessDp,
-                                unit = "dp",
-                                valueRange = 0.5f..4.0f,
-                                onValueChange = { onUpdateSettings { s -> s.copy(outlineThicknessDp = (it * 10).roundToInt() / 10f) } }
-                            )
-                        }
-                    }
-                }
-            }
-
-            item {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
                     val isGlass = settings.designLanguage == DesignLanguage.GLASS
                     SettingsCardItem(
                         position = if (isGlass) GroupPosition.TOP else GroupPosition.SINGLE,
-                        isActive = settings.designLanguage != DesignLanguage.DROIDBUBBLE
+                        isActive = false
                     ) {
                         Column(
                             modifier = Modifier
@@ -2137,7 +2099,8 @@ fun AppearancePage(
                                                 onUpdateSettings {
                                                     it.copy(
                                                         designLanguage = lang,
-                                                        glassEnabled = (lang == DesignLanguage.GLASS)
+                                                        glassEnabled = (lang == DesignLanguage.GLASS),
+                                                        showOutline = if (lang == DesignLanguage.MATERIAL3) false else it.showOutline
                                                     )
                                                 }
                                             }
@@ -2162,13 +2125,77 @@ fun AppearancePage(
                     }
 
                     if (isGlass) {
-                        SettingsCardItem(position = GroupPosition.BOTTOM) {
+                        SettingsCardItem(position = GroupPosition.BOTTOM, isActive = false) {
                             SliderSettingItem(
                                 label = "Opacity",
                                 value = settings.glassOpacity.toFloat(),
                                 unit = "%",
                                 valueRange = 0f..100f,
                                 onValueChange = { onUpdateSettings { s -> s.copy(glassOpacity = it.roundToInt()) } }
+                            )
+                        }
+                    }
+                }
+            }
+
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    val isMaterial3 = settings.designLanguage == DesignLanguage.MATERIAL3
+                    val outlineActive = settings.showOutline && !isMaterial3
+                    SettingsCardItem(
+                        position = if (outlineActive) GroupPosition.TOP else GroupPosition.SINGLE,
+                        isActive = outlineActive
+                    ) {
+                        ListItem(
+                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                            headlineContent = {
+                                Text(
+                                    "Island Outline",
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (isMaterial3) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f) else MaterialTheme.colorScheme.onSurface
+                                )
+                            },
+                            supportingContent = if (isMaterial3) {
+                                {
+                                    Text(
+                                        "Unavailable in Material 3",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                    )
+                                }
+                            } else null,
+                            leadingContent = {
+                                Icon(
+                                    Icons.Default.CropSquare,
+                                    contentDescription = null,
+                                    tint = if (isMaterial3) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f) else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            },
+                            trailingContent = {
+                                Switch(
+                                    checked = if (isMaterial3) false else settings.showOutline,
+                                    enabled = !isMaterial3,
+                                    onCheckedChange = { show ->
+                                        if (!isMaterial3) {
+                                            onUpdateSettings { it.copy(showOutline = show) }
+                                        }
+                                    }
+                                )
+                            }
+                        )
+                    }
+
+                    if (outlineActive) {
+                        SettingsCardItem(position = GroupPosition.BOTTOM) {
+                            SliderSettingItem(
+                                label = "Outline Thickness",
+                                value = settings.outlineThicknessDp,
+                                unit = "dp",
+                                valueRange = 0.5f..4.0f,
+                                onValueChange = { onUpdateSettings { s -> s.copy(outlineThicknessDp = (it * 10).roundToInt() / 10f) } }
                             )
                         }
                     }

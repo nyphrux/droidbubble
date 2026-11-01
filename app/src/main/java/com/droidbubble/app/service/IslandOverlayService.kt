@@ -33,6 +33,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -699,8 +700,15 @@ class IslandOverlayService : Service() {
                 val activeFont = remember(liveSettings.fontKey) {
                     com.droidbubble.app.theme.getIslandFontFamily(liveSettings.fontKey)
                 }
+                val overlayColorScheme = remember {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        dynamicDarkColorScheme(this@IslandOverlayService)
+                    } else {
+                        darkColorScheme()
+                    }
+                }
                 MaterialExpressiveTheme(
-                    colorScheme = darkColorScheme(),
+                    colorScheme = overlayColorScheme,
                     typography = com.droidbubble.app.theme.createTypography(activeFont),
                     motionScheme = MotionScheme.expressive()
                 ) {
