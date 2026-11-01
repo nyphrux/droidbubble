@@ -1,5 +1,7 @@
 package com.droidbubble.app.ui.main
 
+import com.droidbubble.app.island.M3CookieShape
+
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -484,7 +486,6 @@ fun MainScreen(
                         }
 
                         item {
-                            val isIslandActive = settings.isEnabled && PermissionHelper.isOverlayGranted(context)
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -503,7 +504,7 @@ fun MainScreen(
                                 ) {
                                     Surface(
                                         modifier = Modifier.size(52.dp),
-                                        shape = RoundedCornerShape(16.dp),
+                                        shape = M3CookieShape,
                                         color = MaterialTheme.colorScheme.primaryContainer,
                                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                                     ) {
@@ -520,52 +521,13 @@ fun MainScreen(
                                         }
                                     }
 
-                                    Column(
-                                        modifier = Modifier.weight(1f),
-                                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            Text(
-                                                text = "Droidbubble",
-                                                style = MaterialTheme.typography.titleMedium,
-                                                fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.onSurface
-                                            )
-
-                                            Surface(
-                                                shape = RoundedCornerShape(100),
-                                                color = if (isIslandActive) Color(0xFF34C759).copy(alpha = 0.16f) else MaterialTheme.colorScheme.surfaceVariant,
-                                                contentColor = if (isIslandActive) Color(0xFF34C759) else MaterialTheme.colorScheme.onSurfaceVariant
-                                            ) {
-                                                Row(
-                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                                ) {
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .size(6.dp)
-                                                            .clip(CircleShape)
-                                                            .background(if (isIslandActive) Color(0xFF34C759) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
-                                                    )
-                                                    Text(
-                                                        text = if (isIslandActive) "Active" else "Disabled",
-                                                        style = MaterialTheme.typography.labelSmall,
-                                                        fontWeight = FontWeight.Bold
-                                                    )
-                                                }
-                                            }
-                                        }
-
-                                        Text(
-                                            text = "Dynamic Island & Status Bar Overlay",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
+                                    Text(
+                                        text = "Droidbubble",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.weight(1f)
+                                    )
 
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
