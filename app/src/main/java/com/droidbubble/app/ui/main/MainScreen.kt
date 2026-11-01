@@ -193,12 +193,123 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 enum class MainScreenPage {
-    MAIN,
+    TOOLS_ROOT,
+    DROIDBUBBLE,
     DIMENSIONS,
     APPEARANCE,
     GENERAL
 }
 
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun UpdateCardItem(
+    updateState: MainScreenViewModel.UpdateState,
+    onCheck: () -> Unit,
+    onOpenSheet: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isDownloading = updateState is MainScreenViewModel.UpdateState.Downloading
+    val isChecking = updateState is MainScreenViewModel.UpdateState.Checking
+    val isAvailable = updateState is MainScreenViewModel.UpdateState.Available
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(28.dp))
+            .clickable(enabled = !isDownloading && !isChecking) {
+                if (isAvailable) {
+                    onOpenSheet()
+                } else {
+                    onCheck()
+                }
+            },
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+        shadowElevation = 2.dp
+    ) {
+        ListItem(
+            colors = ListItemDefaults.colors(
+                containerColor = Color.Transparent,
+                headlineColor = MaterialTheme.colorScheme.onPrimary,
+                leadingIconColor = MaterialTheme.colorScheme.onPrimary,
+                trailingIconColor = MaterialTheme.colorScheme.onPrimary
+            ),
+            headlineContent = {
+                Text(
+                    text = when (updateState) {
+                        is MainScreenViewModel.UpdateState.Checking -> "Checking for updates..."
+                        is MainScreenViewModel.UpdateState.UpToDate -> "Up to date"
+                        is MainScreenViewModel.UpdateState.Available -> {
+                            val rel = updateState.release
+                            "Update available (${rel.version})"
+                        }
+                        is MainScreenViewModel.UpdateState.Downloading -> {
+                            val p = (updateState.progress * 100).roundToInt()
+                            "Downloading update ($p%)..."
+                        }
+                        is MainScreenViewModel.UpdateState.Error -> "Check for Updates"
+                        else -> "Check for Updates"
+                    },
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+            },
+            leadingContent = {
+                when (updateState) {
+                    is MainScreenViewModel.UpdateState.Checking -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.5.dp
+                        )
+                    }
+                    is MainScreenViewModel.UpdateState.UpToDate -> {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Up to date",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    is MainScreenViewModel.UpdateState.Available -> {
+                        Icon(
+                            imageVector = Icons.Default.SystemUpdate,
+                            contentDescription = "Update Available",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    else -> {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Check for Updates",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            },
+            trailingContent = {
+                if (updateState is MainScreenViewModel.UpdateState.Available) {
+                    val rel = updateState.release
+                    if (rel.isBeta) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.22f)
+                        ) {
+                            Text(
+                                text = "BETA",
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        )
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -220,6 +331,7 @@ fun MainScreen(
     var showAppFilterSheet by remember { mutableStateOf(false) }
     var appFilterQuery by remember { mutableStateOf("") }
 
+    var showDroidbubblePage by remember { mutableStateOf(false) }
     var showDimensionsPage by remember { mutableStateOf(false) }
     var showAppearancePage by remember { mutableStateOf(false) }
     var showGeneralPage by remember { mutableStateOf(false) }
@@ -260,13 +372,19 @@ fun MainScreen(
         showDimensionsPage -> MainScreenPage.DIMENSIONS
         showAppearancePage -> MainScreenPage.APPEARANCE
         showGeneralPage -> MainScreenPage.GENERAL
-        else -> MainScreenPage.MAIN
+        showDroidbubblePage -> MainScreenPage.DROIDBUBBLE
+        else -> MainScreenPage.TOOLS_ROOT
     }
 
     AnimatedContent(
         targetState = currentNavPage,
         transitionSpec = {
-            if (targetState != MainScreenPage.MAIN) {
+            val isNavigatingForward = when {
+                initialState == MainScreenPage.TOOLS_ROOT && targetState != MainScreenPage.TOOLS_ROOT -> true
+                initialState == MainScreenPage.DROIDBUBBLE && (targetState == MainScreenPage.DIMENSIONS || targetState == MainScreenPage.APPEARANCE || targetState == MainScreenPage.GENERAL) -> true
+                else -> false
+            }
+            if (isNavigatingForward) {
                 (slideInHorizontally(
                     initialOffsetX = { fullWidth -> fullWidth },
                     animationSpec = spring(stiffness = Spring.StiffnessMediumLow, dampingRatio = 0.85f)
@@ -317,34 +435,188 @@ fun MainScreen(
                     modifier = modifier
                 )
             }
-            MainScreenPage.MAIN -> {
-        var isDraggingIslandActivity by remember { mutableStateOf(false) }
+            MainScreenPage.TOOLS_ROOT -> {
+                Scaffold(
+                    modifier = modifier,
+                    topBar = {
+                        TopAppBar(
+                            title = {
+                                Text(
+                                    text = "Droidtools",
+                                    fontWeight = FontWeight.Bold
+                                )
+                            },
+                            actions = {
+                                IconButton(onClick = { showFeedbackSheet = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Feedback,
+                                        contentDescription = "Send Feedback",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.background
+                            )
+                        )
+                    }
+                ) { innerPadding ->
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding),
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        item {
+                            UpdateCardItem(
+                                updateState = updateState,
+                                onCheck = { viewModel.checkForUpdates(context) },
+                                onOpenSheet = { viewModel.openUpdateSheet() }
+                            )
+                        }
 
-        Scaffold(
-            modifier = modifier,
-            topBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End
-            ) {
-                IconButton(
-                    onClick = { showFeedbackSheet = true },
-                    modifier = Modifier.size(44.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Feedback,
-                        contentDescription = "Send Feedback",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(26.dp)
-                    )
+                        item {
+                            SectionHeader(
+                                title = "Utilities",
+                                icon = Icons.Default.Widgets
+                            )
+                        }
+
+                        item {
+                            val isIslandActive = settings.isEnabled && PermissionHelper.isOverlayGranted(context)
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .clickable { showDroidbubblePage = true },
+                                shape = RoundedCornerShape(24.dp),
+                                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                tonalElevation = 2.dp
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                ) {
+                                    Surface(
+                                        modifier = Modifier.size(52.dp),
+                                        shape = RoundedCornerShape(16.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                    ) {
+                                        Box(
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Widgets,
+                                                contentDescription = "Droidbubble",
+                                                modifier = Modifier.size(28.dp),
+                                                tint = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                    }
+
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Text(
+                                                text = "Droidbubble",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+
+                                            Surface(
+                                                shape = RoundedCornerShape(100),
+                                                color = if (isIslandActive) Color(0xFF34C759).copy(alpha = 0.16f) else MaterialTheme.colorScheme.surfaceVariant,
+                                                contentColor = if (isIslandActive) Color(0xFF34C759) else MaterialTheme.colorScheme.onSurfaceVariant
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                                ) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(6.dp)
+                                                            .clip(CircleShape)
+                                                            .background(if (isIslandActive) Color(0xFF34C759) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                                                    )
+                                                    Text(
+                                                        text = if (isIslandActive) "Active" else "Disabled",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        Text(
+                                            text = "Dynamic Island & Status Bar Overlay",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                                        contentDescription = "Open Droidbubble",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
-        }
-    ) { innerPadding ->
+
+            MainScreenPage.DROIDBUBBLE -> {
+                BackHandler(onBack = { showDroidbubblePage = false })
+                var isDraggingIslandActivity by remember { mutableStateOf(false) }
+
+                Scaffold(
+                    modifier = modifier,
+                    topBar = {
+                        TopAppBar(
+                            title = {
+                                Text(
+                                    text = "Droidbubble",
+                                    fontWeight = FontWeight.Bold
+                                )
+                            },
+                            navigationIcon = {
+                                IconButton(onClick = { showDroidbubblePage = false }) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back to Droidtools"
+                                    )
+                                }
+                            },
+                            actions = {
+                                IconButton(onClick = { showFeedbackSheet = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Feedback,
+                                        contentDescription = "Send Feedback",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.background
+                            )
+                        )
+                    }
+                ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -440,109 +712,7 @@ fun MainScreen(
                 }
             }
 
-            // UPDATE BUTTON: Shaped like a list component in bright accent color
-            item {
-                val isDownloading = updateState is MainScreenViewModel.UpdateState.Downloading
-                val isChecking = updateState is MainScreenViewModel.UpdateState.Checking
-                val isAvailable = updateState is MainScreenViewModel.UpdateState.Available
 
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(28.dp))
-                        .clickable(enabled = !isDownloading && !isChecking) {
-                            if (isAvailable) {
-                                viewModel.openUpdateSheet()
-                            } else {
-                                viewModel.checkForUpdates(context)
-                            }
-                        },
-                    shape = RoundedCornerShape(28.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    shadowElevation = 2.dp
-                ) {
-                    ListItem(
-                        colors = ListItemDefaults.colors(
-                            containerColor = Color.Transparent,
-                            headlineColor = MaterialTheme.colorScheme.onPrimary,
-                            leadingIconColor = MaterialTheme.colorScheme.onPrimary,
-                            trailingIconColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                        headlineContent = {
-                            Text(
-                                text = when (updateState) {
-                                    is MainScreenViewModel.UpdateState.Checking -> "Checking for updates..."
-                                    is MainScreenViewModel.UpdateState.UpToDate -> "Up to date"
-                                    is MainScreenViewModel.UpdateState.Available -> {
-                                        val rel = (updateState as MainScreenViewModel.UpdateState.Available).release
-                                        "Update available (${rel.version})"
-                                    }
-                                    is MainScreenViewModel.UpdateState.Downloading -> {
-                                        val p = ((updateState as MainScreenViewModel.UpdateState.Downloading).progress * 100).roundToInt()
-                                        "Downloading update ($p%)..."
-                                    }
-                                    is MainScreenViewModel.UpdateState.Error -> "Check for Updates"
-                                    else -> "Check for Updates"
-                                },
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                        },
-                        leadingContent = {
-                            when (updateState) {
-                                is MainScreenViewModel.UpdateState.Checking -> {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(24.dp),
-                                        color = MaterialTheme.colorScheme.onPrimary,
-                                        strokeWidth = 2.5.dp
-                                    )
-                                }
-                                is MainScreenViewModel.UpdateState.UpToDate -> {
-                                    Icon(
-                                        imageVector = Icons.Default.CheckCircle,
-                                        contentDescription = "Up to date",
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                                is MainScreenViewModel.UpdateState.Available -> {
-                                    Icon(
-                                        imageVector = Icons.Default.SystemUpdate,
-                                        contentDescription = "Update Available",
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                                else -> {
-                                    Icon(
-                                        imageVector = Icons.Default.Refresh,
-                                        contentDescription = "Check for Updates",
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                            }
-                        },
-                        trailingContent = {
-                            if (updateState is MainScreenViewModel.UpdateState.Available) {
-                                val rel = (updateState as MainScreenViewModel.UpdateState.Available).release
-                                if (rel.isBeta) {
-                                    Surface(
-                                        shape = RoundedCornerShape(6.dp),
-                                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.22f)
-                                    ) {
-                                        Text(
-                                            text = "BETA",
-                                            color = MaterialTheme.colorScheme.onPrimary,
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.ExtraBold,
-                                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    )
-                }
-            }
 
             // TABS: ISLAND DIMENSIONS & APPEARANCE
             item {
@@ -1172,7 +1342,7 @@ fun MainScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Report a bug or share your feature ideas for Droidbubble.",
+                        text = "Report a bug or share your feature ideas for Droidtools.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1311,7 +1481,7 @@ fun MainScreen(
 
                     Button(
                         onClick = {
-                            val subject = "[Droidbubble ${if (feedbackType == FeedbackType.BUG) "Bug" else "Feature"}] ${feedbackTitle.ifBlank { if (feedbackType == FeedbackType.BUG) "Bug Report" else "Feature Suggestion" }}"
+                            val subject = "[Droidtools ${if (feedbackType == FeedbackType.BUG) "Bug" else "Feature"}] ${feedbackTitle.ifBlank { if (feedbackType == FeedbackType.BUG) "Bug Report" else "Feature Suggestion" }}"
                             val body = buildString {
                                 appendLine("Type: ${if (feedbackType == FeedbackType.BUG) "Bug Report" else "Feature Suggestion"}")
                                 if (feedbackTitle.isNotBlank()) {
@@ -1323,7 +1493,7 @@ fun MainScreen(
                                 appendLine()
                                 appendLine("----------------------------------------")
                                 appendLine("Device & App Info:")
-                                appendLine("Droidbubble Version: ${com.droidbubble.app.util.UpdateManager.getCurrentVersion(context)} (${context.packageName})")
+                                appendLine("Droidtools Version: ${com.droidbubble.app.util.UpdateManager.getCurrentVersion(context)} (${context.packageName})")
                                 appendLine("Device: ${Build.MANUFACTURER} ${Build.MODEL} (${Build.DEVICE})")
                                 appendLine("Android Version: ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})")
                                 appendLine("Island Enabled: ${settings.isEnabled}")
@@ -1351,7 +1521,7 @@ fun MainScreen(
                             // Copy details to clipboard as backup in case user wants to paste elsewhere
                             try {
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                                clipboard?.setPrimaryClip(ClipData.newPlainText("Droidbubble Feedback", body))
+                                clipboard?.setPrimaryClip(ClipData.newPlainText("Droidtools Feedback", body))
                             } catch (_: Exception) {}
 
                             val gmailIntent = Intent(emailIntent).setPackage("com.google.android.gm").apply {
