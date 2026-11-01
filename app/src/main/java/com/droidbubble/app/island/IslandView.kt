@@ -1090,7 +1090,7 @@ fun IslandOverlayRoot(
         isExpanded && (primaryPriority == IslandPriority.SCREEN_RECORDING || primaryPriority == IslandPriority.CALL || primaryPriority == IslandPriority.FPS || primaryPriority == IslandPriority.WEATHER || primaryPriority == IslandPriority.NETWORK_SPEED || primaryPriority == IslandPriority.CHARGING) -> (78.dp * settings.expandedScale).coerceAtLeast(68.dp)
         isExpanded && primaryPriority == IslandPriority.PROGRESS -> (84.dp * settings.expandedScale).coerceAtLeast(74.dp)
         isExpanded && primaryPriority == IslandPriority.POP_NOTIFICATION -> (notifBaseHeight * settings.expandedScale).coerceAtLeast(136.dp)
-        isExpanded && primaryPriority == IslandPriority.FLASHLIGHT -> (205.dp * settings.expandedScale).coerceAtLeast(165.dp)
+        isExpanded && primaryPriority == IslandPriority.FLASHLIGHT -> if (settings.designLanguage == DesignLanguage.MATERIAL3) (74.dp * settings.expandedScale).coerceAtLeast(60.dp) else (205.dp * settings.expandedScale).coerceAtLeast(165.dp)
         isExpanded -> (195.dp * settings.expandedScale).coerceAtLeast(155.dp)
         else -> settings.heightDp.dp
     }
@@ -1125,7 +1125,7 @@ fun IslandOverlayRoot(
             IslandPriority.CHARGING -> 78.dp
             IslandPriority.PROGRESS -> 84.dp
             IslandPriority.POP_NOTIFICATION -> notifBaseHeight
-            IslandPriority.FLASHLIGHT -> 205.dp
+            IslandPriority.FLASHLIGHT -> if (settings.designLanguage == DesignLanguage.MATERIAL3) 74.dp else 205.dp
             else -> 180.dp
         }
         val minH = when (priority) {
@@ -1137,7 +1137,7 @@ fun IslandOverlayRoot(
             IslandPriority.CHARGING -> 68.dp
             IslandPriority.PROGRESS -> 74.dp
             IslandPriority.POP_NOTIFICATION -> 136.dp
-            IslandPriority.FLASHLIGHT -> 165.dp
+            IslandPriority.FLASHLIGHT -> if (settings.designLanguage == DesignLanguage.MATERIAL3) 74.dp else 165.dp
             else -> 150.dp
         }
         return (baseH * settings.expandedScale).coerceAtLeast(minH)
@@ -1562,7 +1562,9 @@ fun IslandOverlayRoot(
                                         )
                                     }
                                 } else {
-                                    val ambientBrush = when {
+                                    val ambientBrush = if (settings.designLanguage == DesignLanguage.MATERIAL3 && primaryPriority != IslandPriority.MEDIA) {
+                                        null
+                                    } else when {
                                         primaryPriority == IslandPriority.MEDIA && mediaAccentColor != Color.Transparent -> {
                                             Brush.verticalGradient(
                                                 colors = listOf(
@@ -1839,7 +1841,9 @@ fun IslandOverlayRoot(
                                         )
                                     }
                                 } else {
-                                    val ambientBrush = when {
+                                    val ambientBrush = if (settings.designLanguage == DesignLanguage.MATERIAL3 && secondaryPriority != IslandPriority.MEDIA) {
+                                        null
+                                    } else when {
                                         secondaryPriority == IslandPriority.MEDIA && mediaAccentColor != Color.Transparent -> {
                                             Brush.verticalGradient(
                                                 colors = listOf(
@@ -2102,7 +2106,9 @@ fun IslandOverlayRoot(
                                         )
                                     }
                                 } else {
-                                    val ambientBrush = when {
+                                    val ambientBrush = if (settings.designLanguage == DesignLanguage.MATERIAL3 && tertiaryPriority != IslandPriority.MEDIA) {
+                                        null
+                                    } else when {
                                         tertiaryPriority == IslandPriority.MEDIA && mediaAccentColor != Color.Transparent -> {
                                             Brush.verticalGradient(
                                                 colors = listOf(
@@ -3804,13 +3810,13 @@ fun ExpandedCardContent(
             ExpandedRecordingView(recording, onCollapse, scale, designLanguage = designLanguage)
         }
         IslandPriority.POP_NOTIFICATION -> {
-            ExpandedNotificationView(notification, onCollapse, scale, maxLines = notificationMaxLines)
+            ExpandedNotificationView(notification, onCollapse, scale, maxLines = notificationMaxLines, designLanguage = designLanguage)
         }
         IslandPriority.CHARGING -> {
-            ExpandedChargingView(charging, onCollapse, scale)
+            ExpandedChargingView(charging, onCollapse, scale, designLanguage = designLanguage)
         }
         IslandPriority.PROGRESS -> {
-            ExpandedProgressView(notification, onCollapse, scale)
+            ExpandedProgressView(notification, onCollapse, scale, designLanguage = designLanguage)
         }
         IslandPriority.MEDIA -> {
             ExpandedMediaView(
@@ -3836,13 +3842,13 @@ fun ExpandedCardContent(
             )
         }
         IslandPriority.FPS -> {
-            ExpandedFpsView(fpsInfo = fpsInfo, onCollapse = onCollapse, scale = scale)
+            ExpandedFpsView(fpsInfo = fpsInfo, onCollapse = onCollapse, scale = scale, designLanguage = designLanguage)
         }
         IslandPriority.WEATHER -> {
-            ExpandedWeatherView(weatherInfo = weatherInfo, onCollapse = onCollapse, scale = scale)
+            ExpandedWeatherView(weatherInfo = weatherInfo, onCollapse = onCollapse, scale = scale, designLanguage = designLanguage)
         }
         IslandPriority.NETWORK_SPEED -> {
-            ExpandedNetworkSpeedView(networkSpeedInfo = networkSpeedInfo, onCollapse = onCollapse, scale = scale)
+            ExpandedNetworkSpeedView(networkSpeedInfo = networkSpeedInfo, onCollapse = onCollapse, scale = scale, designLanguage = designLanguage)
         }
         IslandPriority.IDLE -> {
             LaunchedEffect(Unit) {
@@ -3871,6 +3877,61 @@ fun ExpandedFlashlightView(
 
     val currentLevelState = rememberUpdatedState(currentLevel)
     val onSetLevelState = rememberUpdatedState(onSetLevel)
+
+    if (designLanguage == DesignLanguage.MATERIAL3) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            val (flashBtnInteraction, flashBtnBounce) = rememberBounceButtonState()
+            Box(
+                modifier = Modifier
+                    .size(46.dp)
+                    .then(flashBtnBounce)
+                    .clip(M3CloverShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .clickable(
+                        interactionSource = flashBtnInteraction,
+                        indication = null
+                    ) {
+                        onTurnOff()
+                        onCollapse()
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.FlashlightOn,
+                    contentDescription = "Flashlight",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Slider(
+                value = currentLevel.toFloat(),
+                onValueChange = { newVal ->
+                    val newL = newVal.roundToInt().coerceIn(1, 4)
+                    if (newL != currentLevel) {
+                        currentLevel = newL
+                        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                        onSetLevelState.value(newL)
+                    }
+                },
+                valueRange = 1f..4f,
+                steps = 2,
+                modifier = Modifier.weight(1f),
+                colors = SliderDefaults.colors(
+                    thumbColor = MaterialTheme.colorScheme.primary,
+                    activeTrackColor = MaterialTheme.colorScheme.primary,
+                    inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            )
+        }
+        return
+    }
 
     // Animated fraction for the light beam height (1 -> 0.25f, 4 -> 1.0f)
     val targetFraction = (currentLevel / 4f)
@@ -4460,7 +4521,19 @@ fun ExpandedMediaView(
             contentAlignment = Alignment.Center
         ) {
             // Centered Controls: Previous, Play/Pause, Next
+            val isMediaPlaying = media?.isPlaying == true
+            val cloverRotation = remember { Animatable(if (isMediaPlaying) 45f else 0f) }
+            LaunchedEffect(isMediaPlaying) {
+                cloverRotation.animateTo(
+                    targetValue = if (isMediaPlaying) 45f else 0f,
+                    animationSpec = spring(
+                        dampingRatio = 0.55f,
+                        stiffness = Spring.StiffnessMediumLow
+                    )
+                )
+            }
             val playBtnShape = if (designLanguage == DesignLanguage.MATERIAL3) M3CloverShape else CircleShape
+            val cloverRot = if (designLanguage == DesignLanguage.MATERIAL3) cloverRotation.value else 0f
             val prevNextShape = if (designLanguage == DesignLanguage.MATERIAL3) M3CookieShape else CircleShape
             val prevNextModifier = if (designLanguage == DesignLanguage.MATERIAL3) {
                 Modifier
@@ -4492,6 +4565,9 @@ fun ExpandedMediaView(
                     onClick = { IslandStateManager.onPlayPause?.invoke() },
                     modifier = Modifier
                         .size(playBtnSize)
+                        .graphicsLayer {
+                            rotationZ = cloverRot
+                        }
                         .clip(playBtnShape)
                         .background(playButtonBg)
                 ) {
@@ -4499,7 +4575,11 @@ fun ExpandedMediaView(
                         imageVector = if (media?.isPlaying == true) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = "Play/Pause",
                         tint = playButtonIconTint,
-                        modifier = Modifier.size(playBtnIcon)
+                        modifier = Modifier
+                            .size(playBtnIcon)
+                            .graphicsLayer {
+                                rotationZ = -cloverRot
+                            }
                     )
                 }
 
@@ -4527,7 +4607,8 @@ fun ExpandedMediaView(
 fun ExpandedChargingView(
     charging: IslandStateManager.ChargingInfo?,
     onCollapse: () -> Unit,
-    scale: Float = 1.0f
+    scale: Float = 1.0f,
+    designLanguage: DesignLanguage = DesignLanguage.DROIDBUBBLE
 ) {
     val mintChargingGreen = Color(0xFF7CE8A0)
     val wattage = charging?.wattage
@@ -4604,7 +4685,13 @@ fun ExpandedChargingView(
 }
 
 @Composable
-fun ExpandedNotificationView(notification: NotificationInfo?, onCollapse: () -> Unit, scale: Float = 1.0f, maxLines: Int = 2) {
+fun ExpandedNotificationView(
+    notification: NotificationInfo?,
+    onCollapse: () -> Unit,
+    scale: Float = 1.0f,
+    maxLines: Int = 2,
+    designLanguage: DesignLanguage = DesignLanguage.DROIDBUBBLE
+) {
     val context = LocalContext.current
     var isReplying by remember { mutableStateOf(false) }
     var replyText by remember { mutableStateOf("") }
@@ -4700,10 +4787,13 @@ fun ExpandedNotificationView(notification: NotificationInfo?, onCollapse: () -> 
 
                 Spacer(modifier = Modifier.width(iconGap))
 
+                val notifTitleColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurface else Color.White
+                val notifSubColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFFA1A1AA)
+                val notifDismissTint = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFF8E8E93)
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = notification?.title ?: "Notification",
-                        color = Color.White,
+                        color = notifTitleColor,
                         fontSize = titleSize,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
@@ -4711,7 +4801,7 @@ fun ExpandedNotificationView(notification: NotificationInfo?, onCollapse: () -> 
                     )
                     Text(
                         text = notification?.appName ?: "",
-                        color = Color(0xFFA1A1AA),
+                        color = notifSubColor,
                         fontSize = appNameSize,
                         fontWeight = FontWeight.Medium,
                         maxLines = 1,
@@ -4730,7 +4820,7 @@ fun ExpandedNotificationView(notification: NotificationInfo?, onCollapse: () -> 
                     Icon(
                         Icons.Default.Close,
                         contentDescription = "Dismiss",
-                        tint = Color(0xFF8E8E93),
+                        tint = notifDismissTint,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -4929,8 +5019,16 @@ fun ExpandedNotificationView(notification: NotificationInfo?, onCollapse: () -> 
                         shape = shape,
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
                         colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = if (item.isPrimary) Color(0xFFE5E5EA) else Color(0xFF2C2C2E),
-                            contentColor = if (item.isPrimary) Color.Black else Color(0xFFF4F4F5)
+                            containerColor = if (designLanguage == DesignLanguage.MATERIAL3) {
+                                if (item.isPrimary) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest
+                            } else {
+                                if (item.isPrimary) Color(0xFFE5E5EA) else Color(0xFF2C2C2E)
+                            },
+                            contentColor = if (designLanguage == DesignLanguage.MATERIAL3) {
+                                if (item.isPrimary) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                            } else {
+                                if (item.isPrimary) Color.Black else Color(0xFFF4F4F5)
+                            }
                         )
                     ) {
                         Text(
@@ -4954,7 +5052,12 @@ private data class NotificationActionItem(
 )
 
 @Composable
-fun ExpandedProgressView(notification: NotificationInfo?, onCollapse: () -> Unit, scale: Float = 1.0f) {
+fun ExpandedProgressView(
+    notification: NotificationInfo?,
+    onCollapse: () -> Unit,
+    scale: Float = 1.0f,
+    designLanguage: DesignLanguage = DesignLanguage.DROIDBUBBLE
+) {
     val context = LocalContext.current
     val progressFraction = notification?.progressFraction ?: 0f
     val isIndet = notification?.isIndeterminate == true
@@ -5055,13 +5158,19 @@ fun ExpandedProgressView(notification: NotificationInfo?, onCollapse: () -> Unit
 
             Spacer(modifier = Modifier.width(iconGap))
 
+            val progTitleColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurface else Color.White
+            val progSubColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFFA1A1AA)
+            val progPctColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.primary else Color(0xFF64D2FF)
+            val progBarColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.primary else Color(0xFFE5E5EA)
+            val progTrackColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.surfaceVariant else Color(0xFF2C2C2E)
+
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = notification?.title?.ifBlank { "Downloading" } ?: "Downloading",
-                    color = Color.White,
+                    color = progTitleColor,
                     fontSize = titleSize,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
@@ -5078,7 +5187,7 @@ fun ExpandedProgressView(notification: NotificationInfo?, onCollapse: () -> Unit
                     if (!isIndet && percentageText.isNotEmpty()) {
                         Text(
                             text = percentageText,
-                            color = Color(0xFF64D2FF),
+                            color = progPctColor,
                             fontSize = subtitleSize,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1
@@ -5092,7 +5201,7 @@ fun ExpandedProgressView(notification: NotificationInfo?, onCollapse: () -> Unit
                     }
                     Text(
                         text = displayProgressText,
-                        color = Color(0xFFA1A1AA),
+                        color = progSubColor,
                         fontSize = subtitleSize,
                         fontWeight = FontWeight.Medium,
                         maxLines = 1,
@@ -5108,8 +5217,8 @@ fun ExpandedProgressView(notification: NotificationInfo?, onCollapse: () -> Unit
                             .fillMaxWidth()
                             .height(4.dp)
                             .clip(RoundedCornerShape(2.dp)),
-                        color = Color(0xFFE5E5EA),
-                        trackColor = Color(0xFF2C2C2E)
+                        color = progBarColor,
+                        trackColor = progTrackColor
                     )
                 } else {
                     LinearProgressIndicator(
@@ -5118,8 +5227,8 @@ fun ExpandedProgressView(notification: NotificationInfo?, onCollapse: () -> Unit
                             .fillMaxWidth()
                             .height(4.dp)
                             .clip(RoundedCornerShape(2.dp)),
-                        color = Color(0xFFE5E5EA),
-                        trackColor = Color(0xFF2C2C2E)
+                        color = progBarColor,
+                        trackColor = progTrackColor
                     )
                 }
             }
@@ -5224,7 +5333,7 @@ fun ExpandedRecordingView(
             Spacer(modifier = Modifier.width(10.dp))
             Text(
                 text = timerText,
-                color = Color.White,
+                color = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurface else Color.White,
                 fontSize = timerSize,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.5.sp,
@@ -5246,8 +5355,8 @@ fun ExpandedRecordingView(
                 shape = recSecondaryShape,
                 contentPadding = PaddingValues(0.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = Color(0xFF2C2C2E),
-                    contentColor = Color(0xFFF4F4F5)
+                    containerColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.surfaceContainerHighest else Color(0xFF2C2C2E),
+                    contentColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurface else Color(0xFFF4F4F5)
                 )
             ) {
                 Icon(
@@ -5266,8 +5375,8 @@ fun ExpandedRecordingView(
                 shape = recPrimaryShape,
                 contentPadding = PaddingValues(0.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = Color(0xFFFF453A).copy(alpha = 0.22f),
-                    contentColor = Color(0xFFFF453A)
+                    containerColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.errorContainer else Color(0xFFFF453A).copy(alpha = 0.22f),
+                    contentColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onErrorContainer else Color(0xFFFF453A)
                 )
             ) {
                 Icon(
@@ -5312,9 +5421,11 @@ fun ExpandedCallView(
                 },
             verticalArrangement = Arrangement.Center
         ) {
+            val callNameColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurface else Color.White
+            val callAccentColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.primary else Color(0xFF30D158)
             Text(
                 text = activeCall.callerName.ifBlank { "Active Call" },
-                color = Color.White,
+                color = callNameColor,
                 fontSize = callerSize,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
@@ -5329,13 +5440,13 @@ fun ExpandedCallView(
                 Icon(
                     imageVector = Icons.Default.Call,
                     contentDescription = null,
-                    tint = Color(0xFF30D158),
+                    tint = callAccentColor,
                     modifier = Modifier.size(13.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = timerText,
-                    color = Color(0xFF30D158),
+                    color = callAccentColor,
                     fontSize = timerSize,
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = 0.5.sp,
@@ -5358,8 +5469,16 @@ fun ExpandedCallView(
                 shape = callSecondaryShape,
                 contentPadding = PaddingValues(0.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = if (activeCall.isMuted) Color.White else Color(0xFF2C2C2E),
-                    contentColor = if (activeCall.isMuted) Color.Black else Color(0xFFF4F4F5)
+                    containerColor = if (designLanguage == DesignLanguage.MATERIAL3) {
+                        if (activeCall.isMuted) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest
+                    } else {
+                        if (activeCall.isMuted) Color.White else Color(0xFF2C2C2E)
+                    },
+                    contentColor = if (designLanguage == DesignLanguage.MATERIAL3) {
+                        if (activeCall.isMuted) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                    } else {
+                        if (activeCall.isMuted) Color.Black else Color(0xFFF4F4F5)
+                    }
                 )
             ) {
                 val secondaryIcon = when {
@@ -5383,8 +5502,8 @@ fun ExpandedCallView(
                 shape = callPrimaryShape,
                 contentPadding = PaddingValues(0.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = Color(0xFFFF453A),
-                    contentColor = Color.White
+                    containerColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.errorContainer else Color(0xFFFF453A),
+                    contentColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onErrorContainer else Color.White
                 )
             ) {
                 Icon(
@@ -5888,7 +6007,8 @@ fun CellularSignalBars(
 fun ExpandedFpsView(
     fpsInfo: FpsInfo,
     onCollapse: () -> Unit,
-    scale: Float = 1.0f
+    scale: Float = 1.0f,
+    designLanguage: DesignLanguage = DesignLanguage.DROIDBUBBLE
 ) {
     val context = LocalContext.current
     val isSmooth = fpsInfo.isSmooth
@@ -5912,10 +6032,13 @@ fun ExpandedFpsView(
                 .padding(end = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val fpsIconTint = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.primary else statusColor
+            val fpsTextColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurface else statusColor
+            val fpsSubColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFFA1A1AA)
             Icon(
                 imageVector = Icons.Default.Speed,
                 contentDescription = "FPS",
-                tint = statusColor,
+                tint = fpsIconTint,
                 modifier = Modifier.size(iconSize)
             )
 
@@ -5927,7 +6050,7 @@ fun ExpandedFpsView(
             ) {
                 Text(
                     text = "${fpsInfo.fps}",
-                    color = statusColor,
+                    color = fpsTextColor,
                     fontSize = numberSize,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 0.5.sp,
@@ -5936,7 +6059,7 @@ fun ExpandedFpsView(
 
                 Text(
                     text = "FPS",
-                    color = Color(0xFFA1A1AA),
+                    color = fpsSubColor,
                     fontSize = subtitleSize,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1
@@ -5954,17 +6077,17 @@ fun ExpandedFpsView(
                 onCollapse()
             },
             modifier = Modifier.size(circleButtonSize),
-            shape = CircleShape,
+            shape = if (designLanguage == DesignLanguage.MATERIAL3) M3CookieShape else CircleShape,
             contentPadding = PaddingValues(0.dp),
             colors = ButtonDefaults.filledTonalButtonColors(
-                containerColor = Color(0xFFE5E5EA),
-                contentColor = Color.Black
+                containerColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.surfaceContainerHighest else Color(0xFFE5E5EA),
+                contentColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurface else Color.Black
             )
         ) {
             Icon(
                 imageVector = Icons.Default.OpenInNew,
                 contentDescription = "Display Settings",
-                tint = Color.Black,
+                tint = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurface else Color.Black,
                 modifier = Modifier.size(actionIconSize)
             )
         }
@@ -5975,7 +6098,8 @@ fun ExpandedFpsView(
 fun ExpandedWeatherView(
     weatherInfo: WeatherInfo,
     onCollapse: () -> Unit,
-    scale: Float = 1.0f
+    scale: Float = 1.0f,
+    designLanguage: DesignLanguage = DesignLanguage.DROIDBUBBLE
 ) {
     val weatherIcon = when {
         weatherInfo.condition.contains("Sun", ignoreCase = true) || weatherInfo.condition.contains("Clear", ignoreCase = true) -> Icons.Default.WbSunny
@@ -6004,10 +6128,13 @@ fun ExpandedWeatherView(
                 .padding(end = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val weatherIconColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.primary else iconTint
+            val weatherTextColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurface else Color(0xFFFF9F0A)
+            val weatherSubColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFFA1A1AA)
             Icon(
                 imageVector = weatherIcon,
                 contentDescription = "Weather",
-                tint = iconTint,
+                tint = weatherIconColor,
                 modifier = Modifier.size(iconSize)
             )
 
@@ -6019,7 +6146,7 @@ fun ExpandedWeatherView(
             ) {
                 Text(
                     text = "${weatherInfo.temperatureC}°C",
-                    color = Color(0xFFFF9F0A),
+                    color = weatherTextColor,
                     fontSize = tempSize,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 0.5.sp,
@@ -6028,7 +6155,7 @@ fun ExpandedWeatherView(
 
                 Text(
                     text = "${weatherInfo.cityName.ifBlank { "Local Weather" }} • ${weatherInfo.condition.ifBlank { "Clear" }}",
-                    color = Color(0xFFA1A1AA),
+                    color = weatherSubColor,
                     fontSize = subtitleSize,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
@@ -6043,11 +6170,11 @@ fun ExpandedWeatherView(
                 IslandStateManager.onRefreshWeather?.invoke()
             },
             modifier = Modifier.size(circleButtonSize),
-            shape = CircleShape,
+            shape = if (designLanguage == DesignLanguage.MATERIAL3) M3CookieShape else CircleShape,
             contentPadding = PaddingValues(0.dp),
             colors = ButtonDefaults.filledTonalButtonColors(
-                containerColor = Color(0xFF2C2C2E),
-                contentColor = Color(0xFFF4F4F5)
+                containerColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.surfaceContainerHighest else Color(0xFF2C2C2E),
+                contentColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurface else Color(0xFFF4F4F5)
             )
         ) {
             Icon(
@@ -6063,7 +6190,8 @@ fun ExpandedWeatherView(
 fun ExpandedNetworkSpeedView(
     networkSpeedInfo: NetworkSpeedInfo,
     onCollapse: () -> Unit,
-    scale: Float = 1.0f
+    scale: Float = 1.0f,
+    designLanguage: DesignLanguage = DesignLanguage.DROIDBUBBLE
 ) {
     val context = LocalContext.current
     val iconSize = (32.dp * scale).coerceIn(26.dp, 38.dp)
@@ -6085,10 +6213,13 @@ fun ExpandedNetworkSpeedView(
                 .padding(end = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val netIconColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.primary else cyanAccent
+            val netSpeedColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurface else cyanAccent
+            val netSubColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFFA1A1AA)
             Icon(
                 imageVector = if (networkSpeedInfo.isWifi) Icons.Default.Wifi else Icons.Default.SignalCellularAlt,
                 contentDescription = "Network",
-                tint = cyanAccent,
+                tint = netIconColor,
                 modifier = Modifier.size(iconSize)
             )
 
@@ -6100,7 +6231,7 @@ fun ExpandedNetworkSpeedView(
             ) {
                 Text(
                     text = "↓ ${networkSpeedInfo.downloadSpeedFormatted}",
-                    color = cyanAccent,
+                    color = netSpeedColor,
                     fontSize = speedSize,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1
@@ -6108,7 +6239,7 @@ fun ExpandedNetworkSpeedView(
 
                 Text(
                     text = "↑ ${networkSpeedInfo.uploadSpeedFormatted} • ${networkSpeedInfo.networkLabel.ifBlank { "Network" }}",
-                    color = Color(0xFFA1A1AA),
+                    color = netSubColor,
                     fontSize = subtitleSize,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
@@ -6127,17 +6258,17 @@ fun ExpandedNetworkSpeedView(
                 onCollapse()
             },
             modifier = Modifier.size(circleButtonSize),
-            shape = CircleShape,
+            shape = if (designLanguage == DesignLanguage.MATERIAL3) M3CookieShape else CircleShape,
             contentPadding = PaddingValues(0.dp),
             colors = ButtonDefaults.filledTonalButtonColors(
-                containerColor = Color(0xFFE5E5EA),
-                contentColor = Color.Black
+                containerColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.surfaceContainerHighest else Color(0xFFE5E5EA),
+                contentColor = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurface else Color.Black
             )
         ) {
             Icon(
                 imageVector = Icons.Default.OpenInNew,
                 contentDescription = "Wi-Fi Settings",
-                tint = Color.Black,
+                tint = if (designLanguage == DesignLanguage.MATERIAL3) MaterialTheme.colorScheme.onSurface else Color.Black,
                 modifier = Modifier.size(actionIconSize)
             )
         }
